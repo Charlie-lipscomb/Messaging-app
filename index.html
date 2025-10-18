@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Full Chat App</title>
 <style>
-  body { font-family: system-ui, sans-serif; background: #e5ddd5; margin:0; display:flex; justify-content:center; height:100vh; }
-  main { width:100%; max-width:600px; height:100vh; background:#fff; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-  header { background:#075E54; color:white; padding:14px; text-align:center; font-weight:600; }
-  .screen { display:none; flex:1; flex-direction:column; }
+  body { font-family: system-ui, sans-serif; margin:0; background:#e5ddd5; display:flex; justify-content:center; height:100vh; }
+  main { width:100%; max-width:600px; height:100vh; background:#fff; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.1);}
+  header { background:#075E54; color:white; padding:14px; text-align:center; font-weight:600;}
+  .screen { display:none; flex-direction:column; flex:1; }
   .screen.active { display:flex; }
   input, textarea, button { font-family:inherit; font-size:1rem; }
   .auth { padding:20px; display:flex; flex-direction:column; gap:10px; }
@@ -17,23 +17,23 @@
   #chatList { flex:1; overflow-y:auto; padding:10px; }
   .chat-item { padding:12px; border-bottom:1px solid #ddd; cursor:pointer; }
   .chat-item:hover { background:#f7f7f7; }
+  #chatHeader { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#075E54; color:white; }
+  #chatHeader button { background:#128C7E; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
+  #chatTitle { font-weight:bold; text-align:center; flex:1; margin:0 10px; }
   #messages { flex:1; overflow-y:auto; padding:10px; background:#ece5dd; display:flex; flex-direction:column; }
-  .msg { max-width:70%; padding:10px 14px; border-radius:10px; margin:6px 0; font-size:0.95rem; }
+  .msg { max-width:70%; padding:10px 14px; border-radius:10px; margin:6px 0; font-size:0.95rem; word-break:break-word; }
   .you { align-self:flex-end; background:#dcf8c6; }
   .other { align-self:flex-start; background:#fff; }
   form { display:flex; padding:10px; background:#f0f0f0; }
   textarea { flex:1; padding:10px; border-radius:20px; border:none; resize:none; outline:none; }
   button.send { background:#075E54; color:white; border:none; border-radius:50%; width:42px; height:42px; margin-left:8px; font-size:1.2rem; cursor:pointer; }
-  #chatHeader { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#075E54; color:white; }
-  #chatHeader button { background:#128C7E; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
-  #chatTitle { font-weight:bold; }
 </style>
 </head>
 <body>
 <main>
   <header>💬 Full Chat App</header>
 
-  <!-- AUTH -->
+  <!-- AUTH SCREEN -->
   <div id="authScreen" class="screen active">
     <div class="auth">
       <input id="email" placeholder="Email">
@@ -44,13 +44,13 @@
     </div>
   </div>
 
-  <!-- CHAT LIST -->
+  <!-- CHAT LIST SCREEN -->
   <div id="chatListScreen" class="screen">
     <button id="newGroup" style="margin:10px;">➕ New Group</button>
     <div id="chatList"></div>
   </div>
 
-  <!-- CHAT WINDOW -->
+  <!-- CHAT SCREEN -->
   <div id="chatScreen" class="screen">
     <div id="chatHeader">
       <button id="backBtn">⬅ Back</button>
@@ -67,10 +67,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, push, set, onChildAdded, get, child, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, push, set, onChildAdded, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-// 🔧 Replace this with your Firebase config
+// 🔧 Replace with your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCEdtncZpDgOSnULIjopee7GKh9h9hveKk",
   authDomain: "messagingapp-7ede5.firebaseapp.com",
@@ -80,7 +80,6 @@ const firebaseConfig = {
   messagingSenderId: "221896974865",
   appId: "1:221896974865:web:3faca4885e48ee656907b0"
 };
-  
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
@@ -104,25 +103,25 @@ document.getElementById("signup").onclick = async () => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
   const username = document.getElementById("username").value.trim();
-  if (!email || !password || !username) return alert("Fill all fields");
+  if(!email || !password || !username) return alert("Fill all fields");
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await set(ref(db, "users/" + cred.user.uid), { username, email });
+    const cred = await createUserWithEmailAndPassword(auth,email,password);
+    await set(ref(db,"users/"+cred.user.uid),{username,email});
     alert("Account created!");
-  } catch (err) { alert(err.message); }
+  } catch(err){ alert(err.message); }
 };
 
 // LOG IN
-document.getElementById("login").onclick = async () => {
+document.getElementById("login").onclick = async ()=>{
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  try { await signInWithEmailAndPassword(auth, email, password); }
+  try { await signInWithEmailAndPassword(auth,email,password); }
   catch(err){ alert(err.message); }
 };
 
 // AUTH STATE
-onAuthStateChanged(auth, async (user) => {
-  if (user) { currentUser = user; show(chatListScreen); loadChats(); }
+onAuthStateChanged(auth, async (user)=>{
+  if(user){ currentUser = user; show(chatListScreen); loadChats(); }
   else { show(authScreen); }
 });
 
@@ -132,12 +131,12 @@ async function loadChats(){
   const snapshot = await get(ref(db,"chats"));
   if(!snapshot.exists()) return;
   snapshot.forEach(chatSnap=>{
-    const chat=chatSnap.val();
+    const chat = chatSnap.val();
     if(chat.members && chat.members.includes(currentUser.uid)){
       const div=document.createElement("div");
       div.classList.add("chat-item");
-      div.textContent=chat.isGroup ? "👥 "+chat.name : "💬 "+chat.name;
-      div.onclick=()=>openChat(chatSnap.key, chat.name);
+      div.textContent = chat.isGroup ? "👥 "+chat.name : "💬 "+chat.name;
+      div.onclick = ()=> openChat(chatSnap.key, chat.name);
       chatList.appendChild(div);
     }
   });
@@ -145,35 +144,36 @@ async function loadChats(){
 
 // OPEN CHAT
 async function openChat(chatId, chatName="Chat"){
-  currentChatId=chatId;
+  currentChatId = chatId;
   show(chatScreen);
   messagesDiv.innerHTML="";
-  document.getElementById("chatTitle").textContent=chatName;
-  const messagesRef=ref(db,`chats/${chatId}/messages`);
-  onChildAdded(messagesRef,(snap)=>{
-    const msg=snap.val();
-    const div=document.createElement("div");
+  document.getElementById("chatTitle").textContent = chatName;
+  const messagesRef = ref(db,`chats/${chatId}/messages`);
+  onChildAdded(messagesRef, (snap)=>{
+    const msg = snap.val();
+    const div = document.createElement("div");
     div.classList.add("msg", msg.sender===currentUser.uid?"you":"other");
-    div.textContent=msg.text;
+    div.textContent = msg.text;
     messagesDiv.appendChild(div);
-    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 }
 
 // SEND MESSAGE
-document.getElementById("send").onclick=async ()=>{
-  const msgInput=document.getElementById("message");
-  if(!msgInput.value.trim()||!currentChatId) return;
+document.getElementById("send").onclick = async ()=>{
+  const msgInput = document.getElementById("message");
+  if(!msgInput.value.trim() || !currentChatId) return;
   await push(ref(db,`chats/${currentChatId}/messages`),{
     sender: currentUser.uid,
     text: msgInput.value.trim(),
     time:Date.now()
   });
   msgInput.value="";
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 };
 
 // BACK BUTTON
-document.getElementById("backBtn").onclick=()=>{
+document.getElementById("backBtn").onclick = ()=>{
   currentChatId=null;
   messagesDiv.innerHTML="";
   show(chatListScreen);
@@ -183,7 +183,7 @@ document.getElementById("backBtn").onclick=()=>{
 document.getElementById("newGroup").onclick=async ()=>{
   const name=prompt("Group name:");
   if(!name) return;
-  const newChatRef=push(ref(db,"chats"));
+  const newChatRef = push(ref(db,"chats"));
   await set(newChatRef,{
     name,
     isGroup:true,
@@ -192,39 +192,44 @@ document.getElementById("newGroup").onclick=async ()=>{
   loadChats();
 };
 
-// DIRECT MESSAGE BUTTON
+// DIRECT MESSAGE
 document.getElementById("dmBtn").onclick=async ()=>{
   const targetUsername=prompt("Enter username to DM:");
   if(!targetUsername) return;
-  const usersSnap=await get(ref(db,"users"));
+  const usersSnap = await get(ref(db,"users"));
   let targetUser=null;
   usersSnap.forEach(u=>{
-    const val=u.val();
+    const val = u.val();
     if(val.username.toLowerCase()===targetUsername.toLowerCase()){
       targetUser={ uid:u.key, username: val.username };
     }
   });
   if(!targetUser) return alert("User not found.");
-  const chatsSnap=await get(ref(db,"chats"));
-  let chatId=null;
+  
+  // Check for existing chat
+  const chatsSnap = await get(ref(db,"chats"));
+  let chatId = null;
   if(chatsSnap.exists()){
     chatsSnap.forEach(c=>{
-      const chat=c.val();
+      const chat = c.val();
       if(!chat.isGroup && chat.members.includes(currentUser.uid) && chat.members.includes(targetUser.uid)){
-        chatId=c.key;
+        chatId = c.key;
       }
     });
   }
+
+  // If not found, create new DM
   if(!chatId){
-    const newChatRef=push(ref(db,"chats"));
+    const newChatRef = push(ref(db,"chats"));
     await set(newChatRef,{
       isGroup:false,
-      members:[currentUser.uid,targetUser.uid],
+      members:[currentUser.uid, targetUser.uid],
       name:targetUser.username
     });
-    chatId=newChatRef.key;
+    chatId = newChatRef.key;
   }
-  openChat(chatId,targetUser.username);
+
+  openChat(chatId, targetUser.username);
 };
 </script>
 </body>
