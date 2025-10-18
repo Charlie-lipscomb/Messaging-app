@@ -139,7 +139,42 @@ const show = (el) => {
   [authScreen, chatListScreen, chatScreen].forEach(s => s.classList.remove("active"));
   el.classList.add("active");
 };
+// Add this inside your openChat function or after opening a chat
+const addMemberBtn = document.createElement("button");
+addMemberBtn.textContent = "➕ Add Member";
+addMemberBtn.style.margin = "5px";
+addMemberBtn.onclick = async () => {
+  if (!currentChatId) return;
+  const username = prompt("Enter username to add:");
+  if (!username) return;
 
+  // Look for the user in database
+  const usersSnap = await get(ref(db, "users"));
+  let targetUser = null;
+  usersSnap.forEach(u => {
+    const val = u.val();
+    if (val.username.toLowerCase() === username.toLowerCase()) {
+      targetUser = { uid: u.key, username: val.username };
+    }
+  });
+
+  if (!targetUser) return alert("User not found.");
+
+  // Update chat members array
+  const chatRef = ref(db, `chats/${currentChatId}/members`);
+  const chatSnap = await get(chatRef);
+  let members = chatSnap.exists() ? chatSnap.val() : [];
+  if (!members.includes(targetUser.uid)) {
+    members.push(targetUser.uid);
+    await set(chatRef, members);
+    alert(`${targetUser.username} added to group!`);
+  } else {
+    alert(`${targetUser.username} is already in the group.`);
+  }
+};
+
+// Append button to chat header or somewhere visible
+document.getElementById("chatHeader").appendChild(addMemberBtn);
 // SIGN UP
 document.getElementById("signup").onclick = async () => {
   const email = document.getElementById("email").value.trim();
