@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Live Name & Message Board</title>
+  <style>
+    /* Simple, clean styles */
+    :root {
+      --max-width: 900px;
+      --accent: #2563eb;
+      --muted: #6b7280;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 0;
+      padding: 24px;
+      background: linear-gradient(180deg, var(--bg), #ffffff);
+      color: #0f172a;
+      display: flex;
+      justify-content: center;
+    }
+    .wrap {
+      width: 100%;
+      max-width: var(--max-width);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 6px 20px rgba(2,6,23,0.08);
+      padding: 20px;
+      gap: 18px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      align-items: start;
+    }
+    @media (max-width: 880px) {
+      .wrap { grid-template-columns: 1fr; padding: 16px; }
+    }
+    header {
+      grid-column: 1 / -1;
+      margin-bottom: 4px;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      letter-spacing: -0.2px;
+    }
+    p.lead { margin: 0; color: var(--muted); font-size: 14px; }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+    label { font-size: 13px; color: #0f172a; }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e6eef8;
+      background: #fff;
+      font-size: 14px;
+      resize: vertical;
+    }
+    textarea { min-height: 110px; }
+    .row { display:flex; gap: 12px; }
+    .btn {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .preview {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px dashed #e6eef8;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      min-height: 90px;
+    }
+    .preview .meta { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .preview .msg { white-space: pre-wrap; font-size: 15px; }
+
+    .board {
+      grid-column: 1 / -1;
+      margin-top: 6px;
+    }
+    .msg-card {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #eef6ff;
+      margin-bottom: 10px;
+      background: linear-gradient(180deg,#ffffff,#fbfcff);
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+    }
+    .avatar {
+      width:44px; height:44px; border-radius: 8px;
+      background: linear-gradient(135deg,#e0f2ff,#fff0f6);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; color: #0f172a; font-size: 16px;
+      flex-shrink:0;
+    }
+    .content { flex:1; }
+    .meta-line { font-size: 13px; color: var(--muted); margin-bottom:4px; }
+    .message-text { font-size: 15px; white-space: pre-wrap; color: #091627; }
+
+    .controls { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .counter { color: var(--muted); font-size: 13px; }
+    .small { font-size: 13px; color: var(--muted); }
+
+    footer { grid-column: 1 / -1; text-align:center; color:var(--muted); font-size:12px; margin-top:6px; }
+    .empty { color: var(--muted); padding: 16px; text-align:center; border: 1px dashed #eef6ff; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <main class="wrap" role="main" aria-labelledby="title">
+    <header>
+      <h1 id="title">Live Name & Message Board</h1>
+      <p class="lead">Pick a name, type a message and see a live preview before posting it to the board.</p>
+    </header>
+
+    <section aria-label="Composer" id="composer">
+      <form id="postForm" onsubmit="return false;">
+        <div>
+          <label for="nameInput">Display name</label>
+          <input id="nameInput" type="text" maxlength="30" placeholder="Your name (e.g. Sam)" value="Guest" aria-describedby="nameHelp" />
+          <div id="nameHelp" class="small">Will appear beside your messages. Max 30 characters.</div>
+        </div>
+
+        <div>
+          <label for="msgInput">Message</label>
+          <textarea id="msgInput" maxlength="400" placeholder="Write something..." aria-describedby="msgHelp"></textarea>
+          <div id="msgHelp" class="controls">
+            <div class="counter" id="charCount">0 / 400</div>
+            <div class="small">Press Post to add to the board.</div>
+          </div>
+        </div>
+
+        <div class="row" style="align-items:center;">
+          <div style="flex:1">
+            <button id="postBtn" class="btn" type="button" disabled>Post</button>
+            <button id="clearBtn" class="btn" type="button" style="background:#6b7280; margin-left:8px;">Clear</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label for="timeToggle" class="small">Show time</label>
+            <input id="timeToggle" type="checkbox" checked />
+          </div>
+        </div>
+      </form>
+
+      <div style="margin-top:10px;">
+        <label class="small">Live preview</label>
+        <div class="preview" aria-live="polite" aria-atomic="true">
+          <div class="meta" id="previewMeta">Guest · just now</div>
+          <div class="msg" id="previewMsg">Your message preview will appear here.</div>
+        </div>
+      </div>
+    </section>
+
+    <aside aria-label="Tips" style="padding-left:12px;">
+      <div style="position:sticky; top:18px;">
+        <h2 style="font-size:15px; margin:0 0 8px 0;">Tips</h2>
+        <p class="small">This is a client-side demo — messages live only in your browser. To keep it simple there is no server. You can add persistence by using localStorage or connecting to a backend.</p>
+        <p class="small">Messages are escaped to prevent embedding HTML or scripts.</p>
+      </div>
+    </aside>
+
+    <section class="board" aria-label="Message board">
+      <h2 style="font-size:15px; margin:6px 0;">Message board</h2>
+      <div id="messagesContainer" aria-live="polite">
+        <div class="empty" id="emptyState">No messages yet — be the first to post!</div>
+      </div>
+    </section>
+
+    <footer>
+      Demo • Client-only • No backend
+    </footer>
+  </main>
+
+  <script>
+    // Helper: escape HTML (very important for safety)
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"'`=\/]/g, function(s) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '/': '&#47;',
+          '`': '&#96;',
+          '=': '&#61;'
+        }[s];
+      });
+    }
+
+    // Elements
+    const nameInput = document.getElementById('nameInput');
+    const msgInput = document.getElementById('msgInput');
+    const charCount = document.getElementById('charCount');
+    const postBtn = document.getElementById('postBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewMeta = document.getElementById('previewMeta');
+    const previewMsg = document.getElementById('previewMsg');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const emptyState = document.getElementById('emptyState');
+    const timeToggle = document.getElementById('timeToggle');
+
+    // Update live preview and UI state
+    function updatePreview() {
+      const name = nameInput.value.trim() || 'Guest';
+      const rawMsg = msgInput.value;
+      const escaped = escapeHTML(rawMsg) || 'Your message preview will appear here.';
+      const timeText = timeToggle.checked ? ' · just now' : '';
+      previewMeta.textContent = name + timeText;
+      previewMsg.innerHTML = escaped;
+      charCount.textContent = rawMsg.length + ' / ' + msgInput.maxLength;
+      postBtn.disabled = rawMsg.trim().length === 0 || name.length === 0;
+    }
+
+    // Compose message card element
+    function createMessageCard(name, message, timestamp) {
+      const card = document.createElement('article');
+      card.className = 'msg-card';
+      const initials = (name.split(' ').map(s=>s.charAt(0)).join('').slice(0,2) || 'G').toUpperCase();
+
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = initials;
+
+      const content = document.createElement('div');
+      content.className = 'content';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta-line';
+      meta.textContent = name + (timestamp ? ' · ' + timestamp : '');
+
+      const msgEl = document.createElement('div');
+      msgEl.className = 'message-text';
+      msgEl.innerHTML = escapeHTML(message);
+
+      content.appendChild(meta);
+      content.appendChild(msgEl);
+
+      card.appendChild(avatar);
+      card.appendChild(content);
+      return card;
+    }
+
+    // Post a message to the board
+    function postMessage() {
+      const name = nameInput.value.trim() || 'Guest';
+      const message = msgInput.value.trim();
+      if (!message) return;
+      const now = new Date();
+      const timeString = timeToggle.checked ? now.toLocaleString() : '';
+      const card = createMessageCard(name, message, timeString);
+
+      // Insert at top
+      if (emptyState) {
+        emptyState.remove();
+      }
+      messagesContainer.insertBefore(card, messagesContainer.firstChild);
+
+      // Reset message box, keep name
+      msgInput.value = '';
+      updatePreview();
+
+      // keep focus for convenience
+      msgInput.focus();
+    }
+
+    // Clear the form
+    function clearForm() {
+      nameInput.value = 'Guest';
+      msgInput.value = '';
+      updatePreview();
+    }
+
+    // Events
+    msgInput.addEventListener('input', updatePreview);
+    nameInput.addEventListener('input', updatePreview);
+    timeToggle.addEventListener('change', updatePreview);
+
+    postBtn.addEventListener('click', postMessage);
+    clearBtn.addEventListener('click', clearForm);
+
+    // Enable Enter+Ctrl/Cmd to post quickly when focused on textarea
+    msgInput.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!postBtn.disabled) postMessage();
+      }
+    });
+
+    // Initial preview
+    updatePreview();
+  </script>
+</body>
+</html>
