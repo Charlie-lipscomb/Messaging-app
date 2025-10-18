@@ -147,7 +147,64 @@ addMemberBtn.onclick = async () => {
   if (!currentChatId) return;
   const username = prompt("Enter username to add:");
   if (!username) return;
+// Add this after messagesDiv is populated
+function enableSwipeToReply() {
+  let startX, startY;
 
+  messagesDiv.querySelectorAll(".msg").forEach(msgDiv => {
+    msgDiv.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    });
+
+    msgDiv.addEventListener("touchend", e => {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const diffX = endX - startX;
+      const diffY = endY - startY;
+
+      // Horizontal swipe threshold
+      if (Math.abs(diffX) > 50 && Math.abs(diffY) < 30) {
+        // Only swipe right
+        if (diffX > 0) {
+          const originalText = msgDiv.textContent;
+          document.getElementById("message").value = `Replying to: ${originalText}\n`;
+          document.getElementById("message").focus();
+        }
+      }
+    });
+  });
+}
+
+// Call this function after adding each message
+onChildAdded(messagesRef, snap => {
+  const msg = snap.val();
+  const div = document.createElement("div");
+  div.classList.add("msg", msg.sender === currentUser.uid ? "you" : "other");
+  div.textContent = msg.text;
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  enableSwipeToReply(); // activate swipe
+});
+
+  // Ask permission on page load
+if ("Notification" in window) {
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+}
+
+// Send notification for new messages
+onChildAdded(messagesRef, snap => {
+  const msg = snap.val();
+  if (msg.sender !== currentUser.uid && Notification.permission === "granted") {
+    new Notification(`New message from ${msg.sender}`, {
+      body: msg.text,
+      icon: "https://example.com/chat-icon.png" // optional
+    });
+  }
+});
   // Look for the user in database
   const usersSnap = await get(ref(db, "users"));
   let targetUser = null;
