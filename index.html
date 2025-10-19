@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Chat App</title>
+<title>Whisp</title>
 <style>
   html, body {
     margin: 0;
@@ -281,7 +281,7 @@ const firebaseConfig = {
     show(loginScreen);
   };
 
-  // ✅ MULTIPLE USER GROUP CREATION
+
   document.getElementById("groupBtn").onclick = async () => {
     const name = prompt("Group name:");
     if (!name) return;
@@ -309,7 +309,7 @@ const firebaseConfig = {
     loadChats();
   };
 
-  // ✅ MOBILE NOTIFICATION FIX (via service worker)
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").then(() => {
       console.log("Service worker registered.");
